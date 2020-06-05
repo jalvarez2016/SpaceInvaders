@@ -10,6 +10,7 @@ import spawnEnemy from "./spawnEnemies.jsx";
 import readOutLoud from "./sounds.jsx";
 import PlanetHealth from "./PlanetHealth.jsx";
 import handleEnemyShots from "./handleEnemyShots.jsx";
+import shotCollide from "./shotHit.jsx";
 
 export default class SpaceInvaders extends GameComponent {
   constructor(props) {
@@ -87,18 +88,55 @@ export default class SpaceInvaders extends GameComponent {
     }, CONFIG.FRAMES_PER_SECOND);
   };
 
-  playerHealth = () => {
-    let player;
-    let enemyShots = this.state.enemyShots || [];
+  enemyShotMovement = () => {
+    let bads = this.state.enemies || [];
+    let shots;
     if (this.isCreator()) {
-      player = this.state.playerOne;
+      shots = this.state.playerOne.shots || [];
     } else {
-      player = this.state.playerTwo;
+      shots = this.state.playerTwo.shots || [];
     }
-    for (let i = 0; i < enemyShots; i++) {
-      let enemyShot = enemyShots[i];
-      let newEnemyShots = handleEnemyShots(player, enemyShot);
+    for (let x = 0; x < shots.length; x++) {
+      let shot = shots[x];
+      if (shotCollide(shot, bads)) {
+        console.log("enemy shot movement");
+        let player;
+        let enemyShots = this.state.enemyShots || [];
+        let playerH;
+        if (this.isCreator()) {
+          player = this.state.playerOne;
+          for (let i = 0; i < enemyShots; i++) {
+            let enemyShot = enemyShots[i];
+            let { shots, playerHealth } = handleEnemyShots(player, enemyShot);
+            enemyShots = shots;
+            playerH = playerHealth;
+          }
+          this.getSessionDatabaseRef().update({
+            enemyShots: enemyShots,
+            playerOne: {
+              ...this.state.playerOne,
+              health: playerH
+            }
+          });
+        } else {
+          player = this.state.playerTwo;
+          for (let i = 0; i < enemyShots; i++) {
+            let enemyShot = enemyShots[i];
+            let { shots, playerHealth } = handleEnemyShots(player, enemyShot);
+            enemyShots = shots;
+            playerH = playerHealth;
+          }
+        }
+        this.getSessionDatabaseRef().update({
+          enemyShots: enemyShots,
+          playerTwo: {
+            ...this.state.playerTwo,
+            health: playerH
+          }
+        });
+      }
     }
+    console.log(this.state.enemyShots);
   };
 
   shotMovement = () => {
@@ -136,6 +174,8 @@ export default class SpaceInvaders extends GameComponent {
         enemiesDeployed
       });
     }
+    // this.enemyShotMovement();
+    //this function would be an extentino
   };
 
   enemyFall = num => {

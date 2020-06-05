@@ -3,7 +3,7 @@ import readOutLoud from "./sounds.jsx";
 import spawnEnemies from "./spawnEnemies.jsx";
 
 function handleEnemies(shots, enemies, enemiesDeployed) {
-  if (enemies.length === 0) {
+  if (enemies.length === 0 && enemiesDeployed < 500) {
     enemies = spawnEnemies(30);
     enemiesDeployed = enemiesDeployed + 30;
   } else {
